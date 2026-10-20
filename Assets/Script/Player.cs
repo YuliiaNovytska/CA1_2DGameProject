@@ -1,5 +1,7 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class Player : MonoBehaviour
 {
@@ -10,6 +12,9 @@ public class Player : MonoBehaviour
     private Animator animator;
     public float jumpHeight = 2.4f;
     private bool isJumping = false;
+    private int gold = 0;
+    public TextMeshProUGUI goldText;
+    public GameObject projectilePrefab;
 
     void Start()
     {
@@ -34,7 +39,13 @@ public class Player : MonoBehaviour
             direction = move.x < 0 ? -1 : 1;
             animator.SetInteger("Direction", direction);
         }
-        animator.SetFloat("Move", move.x);
+        animator.SetFloat("Move", Mathf.Abs(move.x));
+
+        if (InputSystem.actions["Attack"].IsPressed())
+        {
+            InputSystem.actions["Attack"].Reset();
+            Fire();
+        }
     }
 
     void FixedUpdate()
@@ -51,5 +62,21 @@ public class Player : MonoBehaviour
         {
             isJumping = false;
         }
+    }
+
+    public void AddCoin()
+    {
+        gold++;
+        if (goldText != null)
+        {
+            goldText.text = "" + gold;
+        }
+    }
+
+    private void Fire()
+    {
+        GameObject go = Instantiate(projectilePrefab, rb.transform.position, Quaternion.identity);
+        Projectile pro = go.GetComponent<Projectile>();
+        pro.Launch(new Vector2(direction, 0), 300);
     }
 }
