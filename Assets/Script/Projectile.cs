@@ -8,9 +8,9 @@ public class Projectile : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
-    public void Launch(Vector2 direction, float force)
+    public void Launch(Vector2 direction, float speed)
     {
-        rb.AddForce(direction * force);
+        rb.linearVelocity = (direction * speed);
     }
 
     public void OnCollisionEnter2D(Collision2D collision)

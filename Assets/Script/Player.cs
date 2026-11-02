@@ -41,9 +41,8 @@ public class Player : MonoBehaviour
         }
         animator.SetFloat("Move", Mathf.Abs(move.x));
 
-        if (InputSystem.actions["Attack"].IsPressed())
+        if (Keyboard.current.fKey.wasPressedThisFrame)
         {
-            InputSystem.actions["Attack"].Reset();
             Fire();
         }
     }
@@ -75,8 +74,8 @@ public class Player : MonoBehaviour
 
     private void Fire()
     {
-        GameObject go = Instantiate(projectilePrefab, rb.transform.position, Quaternion.identity);
+        GameObject go = Instantiate(projectilePrefab, rb.transform.position + Vector3.up * 0.5f, Quaternion.identity);
         Projectile pro = go.GetComponent<Projectile>();
-        pro.Launch(new Vector2(direction, 0), 300);
+        pro.Launch(new Vector2(direction, 0), 10f);
     }
 }
