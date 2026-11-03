@@ -48,14 +48,45 @@ public class Player : MonoBehaviour
         {
             Fire();
         }
+
+        if (isJumping && Keyboard.current.leftShiftKey.isPressed)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.gravityScale = 0;
+            animator.SetBool("Freeze", true);
+
+            if (Camera.main != null)
+            {
+                // ИСПОЛЬЗУЕМ НОВЫЙ INPUT SYSTEM ДЛЯ МЫШИ:
+                Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+
+                Vector2 direction = mousePos - transform.position;
+                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
+            }
+        }
+        else
+        {
+            rb.gravityScale = 3f;
+            animator.SetBool("Freeze", false);
+
+            transform.rotation = Quaternion.Euler(Vector3.zero);
+        }
     }
 
     void FixedUpdate()
     {
         Vector2 position = rb.transform.position;
-        position.x += (move.x * speed) * Time.fixedDeltaTime;
+        if (isJumping && Keyboard.current.leftShiftKey.isPressed)
+        {
+            
+            position.x += (0f * speed) * Time.fixedDeltaTime;
+        }
+        else
+        {
+            position.x += (move.x * speed) * Time.fixedDeltaTime;
+        }
         rb.transform.position = position;
-
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -110,8 +141,24 @@ public class Player : MonoBehaviour
 
     private void Fire()
     {
+        Vector2 shootDirection;
+
+        if (isJumping && Keyboard.current.leftShiftKey.isPressed)
+        {
+            Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+            shootDirection = (mousePos - transform.position).normalized;
+        }
+
+        else
+        {
+            shootDirection = new Vector2(direction, 0);
+        }
+
         GameObject go = Instantiate(projectilePrefab, rb.transform.position + Vector3.up * 0.5f, Quaternion.identity);
         Projectile pro = go.GetComponent<Projectile>();
-        pro.Launch(new Vector2(direction, 0), 10f);
+        pro.Launch(shootDirection, 30f);
+
+        float recoilForce = 5f;
+        rb.AddForce(-shootDirection * recoilForce, ForceMode2D.Impulse);
     }
 }

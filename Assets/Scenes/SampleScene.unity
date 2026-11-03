@@ -1136,7 +1136,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 0
 --- !u!212 &1218452687
 SpriteRenderer:
   serializedVersion: 3
@@ -1225,8 +1225,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
   hp: 5
-  speed: 5
-  jumpHeight: 2.4
+  speed: 7
+  jumpHeight: 6
   goldText: {fileID: 1520913350}
   hpText: {fileID: 282911333}
   projectilePrefab: {fileID: 2754366381291879541, guid: ff9e5fb9da4c75f41b73ecf369b24083, type: 3}
@@ -1452,13 +1452,21 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2610083476406117877, guid: 1f4f39d2156068d479c3bc244d6cab16, type: 3}
+      propertyPath: m_Size.y
+      value: 0.92033744
+      objectReference: {fileID: 0}
+    - target: {fileID: 2610083476406117877, guid: 1f4f39d2156068d479c3bc244d6cab16, type: 3}
+      propertyPath: m_Offset.y
+      value: -0.07108128
+      objectReference: {fileID: 0}
     - target: {fileID: 2963862313604106942, guid: 1f4f39d2156068d479c3bc244d6cab16, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.3557842
       objectReference: {fileID: 0}
     - target: {fileID: 2963862313604106942, guid: 1f4f39d2156068d479c3bc244d6cab16, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.4757025
+      value: 1.551
       objectReference: {fileID: 0}
     - target: {fileID: 2963862313604106942, guid: 1f4f39d2156068d479c3bc244d6cab16, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1498,7 +1506,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9123588051677545513, guid: 1f4f39d2156068d479c3bc244d6cab16, type: 3}
       propertyPath: m_SortingOrder
-      value: 5
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
