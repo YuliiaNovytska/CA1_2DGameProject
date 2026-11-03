@@ -5,6 +5,7 @@ using UnityEngine.SocialPlatforms.Impl;
 
 public class Player : MonoBehaviour
 {
+    public int hp = 5;
     public float speed = 5f;
     private Vector2 move;
     private Rigidbody2D rb;
@@ -14,12 +15,14 @@ public class Player : MonoBehaviour
     private bool isJumping = false;
     private int gold = 0;
     public TextMeshProUGUI goldText;
+    public TextMeshProUGUI hpText;
     public GameObject projectilePrefab;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        UpdateHp();
     }
 
 
@@ -61,6 +64,31 @@ public class Player : MonoBehaviour
         {
             isJumping = false;
         }
+
+        if (collision.gameObject.tag == "Enemy")
+        {
+            hp--;
+            UpdateHp();
+
+            if (hp <= 0)
+            {
+                Destroy(gameObject);
+            }
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if (collision.gameObject.tag == "Enemy")
+        {
+            hp--;
+            UpdateHp();
+
+            if (hp <= 0)
+            {
+                Destroy(gameObject);
+            }
+        }
     }
 
     public void AddCoin()
@@ -69,6 +97,14 @@ public class Player : MonoBehaviour
         if (goldText != null)
         {
             goldText.text = "" + gold;
+        }
+    }
+
+    public void UpdateHp()
+    {
+        if (hpText != null)
+        {
+            hpText.text = "" + hp;
         }
     }
 

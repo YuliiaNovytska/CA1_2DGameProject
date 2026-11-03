@@ -8,8 +8,8 @@ public class Enemy : MonoBehaviour
     private float invincibleCount;
     [SerializeField] private float detectionRadius = 5f; 
     [SerializeField] private float speed = 4f;      
-    [SerializeField] private int strength = 10;           
-    private Transform playerPosition;                   
+    [SerializeField] private int strength = 5;           
+    private Transform playerPosition;
     private bool isChasing = false;
     void Start()
     {
@@ -48,6 +48,7 @@ public class Enemy : MonoBehaviour
         if (!isInvincible)
         {
             strength--;
+            isChasing = true;
             if (strength <= 0)
             {
                 Destroy(this.gameObject);
@@ -74,7 +75,7 @@ public class Enemy : MonoBehaviour
             position.x += direction * speed * Time.fixedDeltaTime;
             rb.transform.position = position;
 
-                animator.SetInteger("Direction", (int)direction);
+            animator.SetInteger("Direction", (int)direction);
                 animator.SetFloat("Move", direction);
         }
         else
