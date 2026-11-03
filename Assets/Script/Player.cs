@@ -17,6 +17,8 @@ public class Player : MonoBehaviour
     public TextMeshProUGUI goldText;
     public TextMeshProUGUI hpText;
     public GameObject projectilePrefab;
+    public float cooldown = 5f;
+    private float cooldownTimer = 0f;
 
     void Start()
     {
@@ -29,6 +31,11 @@ public class Player : MonoBehaviour
     void Update()
     {
         move = InputSystem.actions["Move"].ReadValue<Vector2>();
+
+        if (cooldownTimer > 0)
+        {
+            cooldownTimer -= Time.deltaTime;
+        }
 
         if (InputSystem.actions["Jump"].IsPressed() && isJumping == false)
         {
@@ -49,15 +56,14 @@ public class Player : MonoBehaviour
             Fire();
         }
 
-        if (isJumping && Keyboard.current.leftShiftKey.isPressed)
+        if (isJumping && Keyboard.current.leftShiftKey.isPressed && cooldownTimer <= 0)
         {
-            rb.linearVelocity = Vector2.zero;
+            rb.linearDamping = 7f;
             rb.gravityScale = 0;
             animator.SetBool("Freeze", true);
 
             if (Camera.main != null)
             {
-                // ИСПОЛЬЗУЕМ НОВЫЙ INPUT SYSTEM ДЛЯ МЫШИ:
                 Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
 
                 Vector2 direction = mousePos - transform.position;
@@ -68,6 +74,7 @@ public class Player : MonoBehaviour
         else
         {
             rb.gravityScale = 3f;
+            rb.linearDamping = 0f;
             animator.SetBool("Freeze", false);
 
             transform.rotation = Quaternion.Euler(Vector3.zero);
@@ -142,23 +149,27 @@ public class Player : MonoBehaviour
     private void Fire()
     {
         Vector2 shootDirection;
+        float force = 2f;
 
-        if (isJumping && Keyboard.current.leftShiftKey.isPressed)
+        if (isJumping && Keyboard.current.leftShiftKey.isPressed && cooldownTimer <= 0)
         {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             shootDirection = (mousePos - transform.position).normalized;
+            force = 50f;
+            cooldownTimer = cooldown;
         }
 
         else
         {
             shootDirection = new Vector2(direction, 0);
+            
         }
 
         GameObject go = Instantiate(projectilePrefab, rb.transform.position + Vector3.up * 0.5f, Quaternion.identity);
         Projectile pro = go.GetComponent<Projectile>();
         pro.Launch(shootDirection, 30f);
 
-        float recoilForce = 5f;
-        rb.AddForce(-shootDirection * recoilForce, ForceMode2D.Impulse);
+        
+        rb.AddForce(-shootDirection * force, ForceMode2D.Impulse);
     }
 }
