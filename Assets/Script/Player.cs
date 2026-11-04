@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using UnityEngine.SocialPlatforms.Impl;
 
 public class Player : MonoBehaviour
@@ -14,7 +15,8 @@ public class Player : MonoBehaviour
     public float jumpHeight = 2.4f;
     private bool isJumping = false;
     private int gold = 0;
-//UI
+    private Vector2 lastPosition;
+    //UI
     public TextMeshProUGUI goldText;
     public TextMeshProUGUI hpText;
 //Projectile prefab
@@ -30,6 +32,7 @@ public class Player : MonoBehaviour
 //getting components when the game starts + updating lives
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        lastPosition = rb.transform.position;
         UpdateHp();
     }
 
@@ -110,16 +113,10 @@ public class Player : MonoBehaviour
         {
             isJumping = false;
         }
-    //when touching an enemy, decreasing healt and udating the UI of it
+    
         if (collision.gameObject.tag == "Enemy")
         {
-            hp--;
-            UpdateHp();
-    //when there is no more lives, destroying the player
-            if (hp <= 0)
-            {
-                Destroy(gameObject);
-            }
+            TakeDamage();
         }
     }
     //when it's a trap (using the same "Enemy" tag, but it is a Trigger)
@@ -127,16 +124,11 @@ public class Player : MonoBehaviour
     {
         if (collision.gameObject.tag == "Enemy")
         {
-            hp--;
-            UpdateHp();
-
-            if (hp <= 0)
-            {
-                Destroy(gameObject);
-            }
+            TakeDamage();
         }
         if (collision.gameObject.tag == "Checkpoint")
         {
+            lastPosition = collision.transform.position;
             Checkpoint cp = collision.gameObject.GetComponent<Checkpoint>();
             collision.gameObject.GetComponent<Checkpoint>().Hit();
         }
@@ -150,6 +142,12 @@ public class Player : MonoBehaviour
             goldText.text = "" + gold;
         }
     }
+
+    public void AddHp()
+    {
+        hp++;
+        UpdateHp();
+    }
     //updating the UI for lives
     public void UpdateHp()
     {
@@ -158,7 +156,24 @@ public class Player : MonoBehaviour
             hpText.text = "" + hp;
         }
     }
-    
+
+    private void TakeDamage()
+    {
+        //when taking damage, decreasing healt and udating the UI of it
+        hp--;
+        UpdateHp();
+
+        if (hp > 0)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.transform.position = lastPosition;
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        }
+    }
+
     private void Fire()
     {
         Vector2 shootDirection;
