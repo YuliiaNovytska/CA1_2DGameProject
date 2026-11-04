@@ -64,12 +64,14 @@ public class Player : MonoBehaviour
     //freeze in the air when player is jumping, left shift is pressed and cooldown is ready
         if (isJumping && Keyboard.current.leftShiftKey.isPressed && cooldownTimer <= 0)
         {
+    //linearDamping adds some kind of air resistance, so the movement gets smoother before player freezes
             rb.linearDamping = 7f;
             rb.gravityScale = 0;
             animator.SetBool("Freeze", true);
     //if the main camera there, letting the sprite rotate around itself towards the cursor of the mouse
             if (Camera.main != null)
             {
+    //Mouse.current.position.ReadValue() gives the curren coordinates of the position of the mouse
                 Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
                 Vector2 direction = mousePos - transform.position;
                 float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
@@ -171,12 +173,12 @@ public class Player : MonoBehaviour
         {
             shootDirection = new Vector2(direction, 0);
         }
-
+    //spawn the bullet and launch it
         GameObject go = Instantiate(projectilePrefab, rb.transform.position + Vector3.up * 0.5f, Quaternion.identity);
         Projectile pro = go.GetComponent<Projectile>();
         pro.Launch(shootDirection, 30f);
-
         
+    //push the player in the opposit direction
         rb.AddForce(-shootDirection * force, ForceMode2D.Impulse);
     }
 }
