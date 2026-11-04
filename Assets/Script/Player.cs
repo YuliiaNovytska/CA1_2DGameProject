@@ -215,7 +215,7 @@ public class Player : MonoBehaviour
         }
         else
         {
-            SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+            SceneManager.LoadScene("Menu");
         }
     }
 
