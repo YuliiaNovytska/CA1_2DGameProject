@@ -11,7 +11,10 @@ public class Enemy : MonoBehaviour
     [SerializeField] private int strength = 5;           
     private Transform playerPosition;
     private bool isChasing = false;
-    
+    [SerializeField] private AudioSource roarSound;
+    [SerializeField] private float roarInterval = 10f;
+    private float roarTimer = 0f;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -32,6 +35,16 @@ public class Enemy : MonoBehaviour
             {
                 isInvincible = false;
                 invincibleCount = 0;
+            }
+        }
+
+        if (isChasing && roarSound != null)
+        {
+            roarTimer -= Time.deltaTime;
+            if (roarTimer <= 0f)
+            {
+                roarSound.Play(); // Издаем звук рычания
+                roarTimer = roarInterval; // Сбрасываем таймер на 10 секунд
             }
         }
     }

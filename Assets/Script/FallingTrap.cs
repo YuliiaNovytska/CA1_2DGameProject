@@ -3,6 +3,7 @@ using UnityEngine;
 public class FallingTrap : MonoBehaviour
 {
     private Rigidbody2D rb;
+
     private bool isFalling = false;
     void Start()
     {

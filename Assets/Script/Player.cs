@@ -2,11 +2,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using UnityEngine.SocialPlatforms.Impl;
 
 public class Player : MonoBehaviour
 {
-//player stats
+    //player stats
     public int hp = 5;
     public float speed = 5f;
     private Vector2 move;
@@ -16,74 +15,111 @@ public class Player : MonoBehaviour
     private bool isJumping = false;
     private int gold = 0;
     private Vector2 lastPosition;
+
     //UI
     public TextMeshProUGUI goldText;
     public TextMeshProUGUI hpText;
-//Projectile prefab
+
+    //Projectile prefab
     public GameObject projectilePrefab;
-//settings for cooldown when "Freeze"
+
+    //settings for cooldown when "Freeze"
     public float cooldown = 5f;
     private float cooldownTimer = 0f;
-//Animator
+
+    //Animator
     private Animator animator;
+
+    //Audio
+    [SerializeField] private AudioSource shootSound;
+    [SerializeField] private AudioSource coinSound;
+    [SerializeField] private AudioSource heartSound;
+    [SerializeField] private AudioSource punchImpactSound;
+    [SerializeField] private AudioSource stepSound;
+    [SerializeField] private float stepInterval = 0.4f;
+    private float stepTimer = 0f;
+    private AudioSource audioSource;
 
     void Start()
     {
-//getting components when the game starts + updating lives
+        //getting components when the game starts + updating lives
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
         lastPosition = rb.transform.position;
         UpdateHp();
     }
 
     void Update()
     {
-    //read movement
+        //read movement
         move = InputSystem.actions["Move"].ReadValue<Vector2>();
         if (cooldownTimer > 0)
         {
             cooldownTimer -= Time.deltaTime;
         }
-    //let thr jump happen if the button is pressed and the player is on the ground (not jumping yet)
+
+        //let the jump happen if the button is pressed and the player is on the ground (not jumping yet)
         if (InputSystem.actions["Jump"].IsPressed() && isJumping == false)
         {
             rb.linearVelocity = Vector2.zero;
             rb.AddForce(new Vector2(0, Mathf.Sqrt(-2 * Physics2D.gravity.y * jumpHeight)), ForceMode2D.Impulse);
-    //showing that the jump is happening
+            //showing that the jump is happening
             isJumping = true;
         }
-    //change direction and updating animator when the player moves left/right
+
+        //change direction and updating animator when the player moves left/right
         if (move.x != 0)
         {
             direction = move.x < 0 ? -1 : 1;
             animator.SetInteger("Direction", direction);
         }
         animator.SetFloat("Move", Mathf.Abs(move.x));
-    //F key for "Fire"
+
+        if (move.x != 0 && !isJumping)
+        {
+            stepTimer -= Time.deltaTime;
+            if (stepTimer <= 0f)
+            {
+                if (stepSound != null)
+                {
+                    stepSound.Play();
+                }
+                stepTimer = stepInterval;
+            }
+        }
+        else
+        {
+            stepTimer = 0f;
+        }
+
+        //F key for "Fire"
         if (Keyboard.current.fKey.wasPressedThisFrame)
         {
             Fire();
         }
-    //freeze in the air when player is jumping, left shift is pressed and cooldown is ready
+
+        //freeze in the air when player is jumping, left shift is pressed and cooldown is ready
         if (isJumping && Keyboard.current.leftShiftKey.isPressed && cooldownTimer <= 0)
         {
-    //linearDamping adds some kind of air resistance, so the movement gets smoother before player freezes
+            //linearDamping adds some kind of air resistance, so the movement gets smoother before player freezes
             rb.linearDamping = 7f;
             rb.gravityScale = 0;
             animator.SetBool("Freeze", true);
-    //if the main camera there, letting the sprite rotate around itself towards the cursor of the mouse
+
+            //if the main camera there, letting the sprite rotate around itself towards the cursor of the mouse
             if (Camera.main != null)
             {
-    //Mouse.current.position.ReadValue() gives the curren coordinates of the position of the mouse
+                //Mouse.current.position.ReadValue() gives the current coordinates of the position of the mouse
                 Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-                Vector2 direction = mousePos - transform.position;
-                float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                Vector2 dirMouse = mousePos - transform.position;
+                float angle = Mathf.Atan2(dirMouse.y, dirMouse.x) * Mathf.Rad2Deg;
                 transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
             }
         }
         else
         {
-    //if not frozen, changing to the original gravity and rotation
+            //if not frozen, changing to the original gravity and rotation
             rb.gravityScale = 3f;
             rb.linearDamping = 0f;
             animator.SetBool("Freeze", false);
@@ -93,7 +129,7 @@ public class Player : MonoBehaviour
 
     void FixedUpdate()
     {
-    //handling movement, blockinf when player is frozen in the air
+        //handling movement, blocking when player is frozen in the air
         Vector2 position = rb.transform.position;
         if (isJumping && Keyboard.current.leftShiftKey.isPressed)
         {
@@ -108,17 +144,18 @@ public class Player : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-    //when player is on the ground, letting them to jump again
+        //when player is on the ground, letting them to jump again
         if (collision.gameObject.tag == "Ground")
         {
             isJumping = false;
         }
-    
+
         if (collision.gameObject.tag == "Enemy")
         {
             TakeDamage();
         }
     }
+
     //when it's a trap (using the same "Enemy" tag, but it is a Trigger)
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -130,13 +167,18 @@ public class Player : MonoBehaviour
         {
             lastPosition = collision.transform.position;
             Checkpoint cp = collision.gameObject.GetComponent<Checkpoint>();
-            collision.gameObject.GetComponent<Checkpoint>().Hit();
+            if (cp != null)
+            {
+                cp.Hit();
+            }
         }
     }
+
     //increase the coin count and updating the UI for coins
     public void AddCoin()
     {
         gold++;
+        coinSound.Play();
         if (goldText != null)
         {
             goldText.text = "" + gold;
@@ -146,8 +188,10 @@ public class Player : MonoBehaviour
     public void AddHp()
     {
         hp++;
+        heartSound.Play();
         UpdateHp();
     }
+
     //updating the UI for lives
     public void UpdateHp()
     {
@@ -159,8 +203,9 @@ public class Player : MonoBehaviour
 
     private void TakeDamage()
     {
-        //when taking damage, decreasing healt and udating the UI of it
+        //when taking damage, decreasing health and updating the UI of it
         hp--;
+        punchImpactSound.Play();
         UpdateHp();
 
         if (hp > 0)
@@ -178,27 +223,35 @@ public class Player : MonoBehaviour
     {
         Vector2 shootDirection;
         float force = 2f;
-    //if the player is frozen, shoot in the direction of a mouse
+
+        //if the player is frozen, shoot in the direction of a mouse
         if (isJumping && Keyboard.current.leftShiftKey.isPressed && cooldownTimer <= 0)
         {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             shootDirection = (mousePos - transform.position).normalized;
-    //making the force stronger
+            //making the force stronger
             force = 50f;
-    // trigger cooldown, so the player can't shoot too often
+            // trigger cooldown, so the player can't shoot too often
             cooldownTimer = cooldown;
         }
-    //if not frozen, shoot in the normal facing direction
+        //if not frozen, shoot in the normal facing direction
         else
         {
             shootDirection = new Vector2(direction, 0);
         }
-    //spawn the bullet and launch it
+
+        //spawn the bullet and launch it
         GameObject go = Instantiate(projectilePrefab, rb.transform.position + Vector3.up * 0.5f, Quaternion.identity);
         Projectile pro = go.GetComponent<Projectile>();
         pro.Launch(shootDirection, 30f);
-        
-    //push the player in the opposit direction
+
+        // Play shoot audio source directly
+        if (shootSound != null)
+        {
+            shootSound.Play();
+        }
+
+        //push the player in the opposite direction
         rb.AddForce(-shootDirection * force, ForceMode2D.Impulse);
     }
 }

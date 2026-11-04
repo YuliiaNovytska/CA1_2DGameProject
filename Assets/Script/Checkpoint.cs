@@ -6,12 +6,14 @@ public class Checkpoint : MonoBehaviour
     [SerializeField] private Sprite inactive;
     [SerializeField] private Sprite active;
     private SpriteRenderer spriteRenderer;
+    private AudioSource audioSource;
+    [SerializeField] private AudioSource checkpointSound;
 
     void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
 
-        if (inactive != null && spriteRenderer != null)
+        if (inactive != null)
         {
             spriteRenderer.sprite = inactive;
         }
@@ -22,8 +24,9 @@ public class Checkpoint : MonoBehaviour
         if (!isHit)
         {
             isHit = true;
+            checkpointSound.Play();
 
-            if (active != null && spriteRenderer != null)
+            if (active != null)
             {
                 spriteRenderer.sprite = active;
             }
