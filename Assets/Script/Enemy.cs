@@ -11,6 +11,7 @@ public class Enemy : MonoBehaviour
     [SerializeField] private int strength = 5;           
     private Transform playerPosition;
     private bool isChasing = false;
+    
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -62,7 +63,6 @@ public class Enemy : MonoBehaviour
     {
         if (playerPosition == null) return;
             float distanceToPlayer = Vector2.Distance(rb.transform.position, playerPosition.position); 
-        
 
         if (distanceToPlayer <= detectionRadius)
             isChasing = true;
@@ -76,11 +76,11 @@ public class Enemy : MonoBehaviour
             rb.transform.position = position;
 
             animator.SetInteger("Direction", (int)direction);
-                animator.SetFloat("Move", direction);
+            animator.SetFloat("Move", direction);
         }
         else
         {
-                animator.SetFloat("Move", 0);
+            animator.SetFloat("Move", 0);
         }
     }
 }
