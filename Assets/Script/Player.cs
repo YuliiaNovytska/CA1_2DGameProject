@@ -127,6 +127,11 @@ public class Player : MonoBehaviour
                 Destroy(gameObject);
             }
         }
+        if (collision.gameObject.tag == "Checkpoint")
+        {
+            Checkpoint cp = collision.gameObject.GetComponent<Checkpoint>();
+            collision.gameObject.GetComponent<Checkpoint>().Hit();
+        }
     }
 
     public void AddCoin()
