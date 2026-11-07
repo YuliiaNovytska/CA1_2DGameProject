@@ -19,6 +19,7 @@ public class Player : MonoBehaviour
     //UI
     public TextMeshProUGUI goldText;
     public TextMeshProUGUI hpText;
+    public TextMeshProUGUI cooldownText;
 
     //Projectile prefab
     public GameObject projectilePrefab;
@@ -57,7 +58,14 @@ public class Player : MonoBehaviour
         if (cooldownTimer > 0)
         {
             cooldownTimer -= Time.deltaTime;
+            cooldownText.gameObject.SetActive(true);
+            cooldownText.text = "Cooldown: " + cooldownTimer.ToString("F1") + "s";
         }
+        else 
+        {
+                cooldownText.gameObject.SetActive(false);
+        }
+
 
         //let the jump happen if the button is pressed and the player is on the ground (not jumping yet)
         if (InputSystem.actions["Jump"].IsPressed() && isJumping == false)
@@ -142,14 +150,29 @@ public class Player : MonoBehaviour
         rb.transform.position = position;
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnCollisionStay2D(Collision2D collision)
     {
         //when player is on the ground, letting them to jump again
         if (collision.gameObject.tag == "Ground")
         {
-            isJumping = false;
+        // Had a problem where spamming the jump button right next to a wall 
+        // allowed the player to climb up like an elevator.
+        // This code chekcs every where the player touches the ground to ensure the player is standing on the floor
+        // and not sliding against a wall.
+            foreach (ContactPoint2D contact in collision.contacts)
+            {
+                
+                if (contact.normal.y > 0.5f)
+                {
+                    isJumping = false;
+                    break;
+                }
+            }
         }
+    }
 
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
         if (collision.gameObject.tag == "Enemy")
         {
             TakeDamage();
@@ -230,20 +253,23 @@ public class Player : MonoBehaviour
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             shootDirection = (mousePos - transform.position).normalized;
             //making the force stronger
-            force = 50f;
+            force = 60f;
             // trigger cooldown, so the player can't shoot too often
             cooldownTimer = cooldown;
+
+            Debug.Log("FREEZE FIRE! Force applied: " + force + ", Direction: " + shootDirection);
         }
         //if not frozen, shoot in the normal facing direction
         else
         {
             shootDirection = new Vector2(direction, 0);
+            Debug.Log("Normal Fire! Force applied: " + force);
         }
 
         //spawn the bullet and launch it
         GameObject go = Instantiate(projectilePrefab, rb.transform.position + Vector3.up * 0.5f, Quaternion.identity);
         Projectile pro = go.GetComponent<Projectile>();
-        pro.Launch(shootDirection, 30f);
+        pro.Launch(shootDirection, 20f);
 
         // Play shoot audio source directly
         if (shootSound != null)
@@ -252,6 +278,7 @@ public class Player : MonoBehaviour
         }
 
         //push the player in the opposite direction
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
         rb.AddForce(-shootDirection * force, ForceMode2D.Impulse);
     }
 }
