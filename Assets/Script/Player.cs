@@ -3,6 +3,11 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
+///
+/// player character: handles movement, jumping, 
+/// a special freeze mechanic in mid-air, shooting projectiles with recoil, 
+/// health, coin collection, checkpoint respawns, and audio effects.
+/// 
 public class Player : MonoBehaviour
 {
     //player stats
@@ -25,7 +30,7 @@ public class Player : MonoBehaviour
     public GameObject projectilePrefab;
 
     //settings for cooldown when "Freeze"
-    public float cooldown = 5f;
+    public float cooldown = 2f;
     private float cooldownTimer = 0f;
 
     //Animator
@@ -55,6 +60,11 @@ public class Player : MonoBehaviour
     {
         //read movement
         move = InputSystem.actions["Move"].ReadValue<Vector2>();
+
+        if (isJumping && move.x != 0)
+        {
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        }
         if (cooldownTimer > 0)
         {
             cooldownTimer -= Time.deltaTime;
@@ -65,7 +75,6 @@ public class Player : MonoBehaviour
         {
                 cooldownText.gameObject.SetActive(false);
         }
-
 
         //let the jump happen if the button is pressed and the player is on the ground (not jumping yet)
         if (InputSystem.actions["Jump"].IsPressed() && isJumping == false)
@@ -223,11 +232,11 @@ public class Player : MonoBehaviour
             hpText.text = "" + hp;
         }
     }
-
     private void TakeDamage()
     {
         //when taking damage, decreasing health and updating the UI of it
         hp--;
+        GameData.collectedGold = gold;
         punchImpactSound.Play();
         UpdateHp();
 
@@ -253,17 +262,14 @@ public class Player : MonoBehaviour
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
             shootDirection = (mousePos - transform.position).normalized;
             //making the force stronger
-            force = 60f;
+            force = 55f;
             // trigger cooldown, so the player can't shoot too often
             cooldownTimer = cooldown;
-
-            Debug.Log("FREEZE FIRE! Force applied: " + force + ", Direction: " + shootDirection);
         }
         //if not frozen, shoot in the normal facing direction
         else
         {
             shootDirection = new Vector2(direction, 0);
-            Debug.Log("Normal Fire! Force applied: " + force);
         }
 
         //spawn the bullet and launch it
@@ -280,5 +286,9 @@ public class Player : MonoBehaviour
         //push the player in the opposite direction
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
         rb.AddForce(-shootDirection * force, ForceMode2D.Impulse);
+    }
+    public static class GameData
+    {
+        public static int collectedGold = 0;
     }
 }

@@ -1,5 +1,10 @@
 using UnityEngine;
 
+///
+/// Enemy behavior: sleeps until the player gets close (or attacks them). Once disturbed, they wake up, 
+/// start chasing the player.
+///
+
 public class Enemy : MonoBehaviour
 {
     private Rigidbody2D rb;
@@ -12,6 +17,7 @@ public class Enemy : MonoBehaviour
     private Transform playerPosition;
     private bool isChasing = false;
     [SerializeField] private AudioSource roarSound;
+    [SerializeField] private AudioSource snoreSound;
     [SerializeField] private float roarInterval = 10f;
     private float roarTimer = 0f;
 
@@ -19,15 +25,22 @@ public class Enemy : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        // Find the player object in the scene by tag
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
             playerPosition = playerObj.transform;
         }
+        // start playing the snoring sound in a loop when the enemy is still idle
+        if (!snoreSound.isPlaying)
+        {
+            snoreSound.Play();
+        }
     }
 
     void Update()
     {
+        // temporary invincibility cooldown after taking damage
         if (isInvincible)
         {
             invincibleCount += Time.deltaTime;
@@ -37,19 +50,26 @@ public class Enemy : MonoBehaviour
                 invincibleCount = 0;
             }
         }
-
-        if (isChasing && roarSound != null)
+        // when the enemy is chasing the player
+        if (isChasing)
         {
+            // Stop snoring
+            if (snoreSound.isPlaying)
+            {
+                snoreSound.Stop();
+            }
+            // Periodically play the roar sound during the chase using timer
             roarTimer -= Time.deltaTime;
             if (roarTimer <= 0f)
             {
-                roarSound.Play(); // Издаем звук рычания
-                roarTimer = roarInterval; // Сбрасываем таймер на 10 секунд
+                roarSound.Play();
+                roarTimer = roarInterval;
             }
         }
     }
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        // Check if hit by a player projectile
         if (collision.gameObject.GetComponent<Projectile>() != null)
         {
             rb.linearVelocity = Vector2.zero;
@@ -59,10 +79,14 @@ public class Enemy : MonoBehaviour
 
     private void Hit()
     {
+        // take damage if not invincible
         if (!isInvincible)
         {
             strength--;
+            // wake up and start chasing when hit
             isChasing = true;
+
+            // destroy enemy if health drops to zero or less
             if (strength <= 0)
             {
                 Destroy(this.gameObject);
@@ -74,25 +98,29 @@ public class Enemy : MonoBehaviour
 
     private void FixedUpdate()
     {
+        //calculate distance between enemy and player
         if (playerPosition == null) return;
-            float distanceToPlayer = Vector2.Distance(rb.transform.position, playerPosition.position); 
+            float distanceToPlayer = Vector2.Distance(rb.transform.position, playerPosition.position);
 
+        //trigger chase mode if the player enters the detection radius
         if (distanceToPlayer <= detectionRadius)
             isChasing = true;
 
         if (isChasing)
         {
+            // Determine movement direction towards the player
             float direction = Mathf.Sign(playerPosition.position.x - rb.transform.position.x);
 
             Vector2 position = rb.transform.position;
             position.x += direction * speed * Time.fixedDeltaTime;
             rb.transform.position = position;
-
+            // Update animator parameters for movement
             animator.SetInteger("Direction", (int)direction);
             animator.SetFloat("Move", direction);
         }
         else
         {
+            //idle state
             animator.SetFloat("Move", 0);
         }
     }

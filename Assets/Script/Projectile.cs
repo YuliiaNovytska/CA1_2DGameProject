@@ -7,18 +7,15 @@ public class Projectile : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
     }
-
+    //launch the projectile in a given direction with a specific speed
     public void Launch(Vector2 direction, float speed)
     {
+        // Set the velocity of the projectile
         rb.linearVelocity = (direction * speed);
-        if (direction.x > 0)
-        {
-            transform.localScale = new Vector3(-1, 1, 1); 
-        }
     }
-
     public void OnCollisionEnter2D(Collision2D collision)
     {
+        // destroy projectile immediately when colliding with any object
         Destroy(this.gameObject);
     }
 
